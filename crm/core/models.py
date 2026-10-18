@@ -20,7 +20,7 @@ class Users(models.Model):
 
 
 class UserProfiles(models.Model):
-    user = models.OneToOneField(Users, models.DB_CASCADE, primary_key=True)
+    user = models.OneToOneField(Users, models.CASCADE, primary_key=True)
     full_name = models.TextField(blank=True, null=True)
     phone = models.TextField(blank=True, null=True)
     updated_at = models.TextField()
@@ -42,7 +42,7 @@ class Plans(models.Model):
 
 
 class PlanFeatures(models.Model):
-    plan = models.ForeignKey(Plans, models.DB_CASCADE)
+    plan = models.ForeignKey(Plans, models.CASCADE)
     feature = models.TextField()
     sort_order = models.IntegerField()
 
@@ -101,7 +101,7 @@ class Conversations(models.Model):
 
 
 class Messages(models.Model):
-    conversation = models.ForeignKey(Conversations, models.DB_CASCADE)
+    conversation = models.ForeignKey(Conversations, models.CASCADE)
     sender = models.ForeignKey(Users, models.DO_NOTHING)
     body = models.TextField()
     created_at = models.TextField()
@@ -112,7 +112,7 @@ class Messages(models.Model):
 
 
 class Notifications(models.Model):
-    user = models.ForeignKey(Users, models.DB_CASCADE)
+    user = models.ForeignKey(Users, models.CASCADE)
     kind = models.TextField()
     title = models.TextField()
     body = models.TextField(blank=True, null=True)
