@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# Прод: значения задаются переменными окружения (Amvera → Переменные и секреты)
+# Прод: значения задаются переменными окружения в панели платформы
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-o@2pdsmvgz)352ih@618etpct=xy*de#pm%#9zp!x@fmos5j^v')
 
 DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
@@ -29,7 +29,7 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'DJANGO_CSRF_ORIGINS',
-    'https://*.relaxdev.ru,https://*.amvera.io',
+    'https://*.relaxdev.ru',
 ).split(',')
 
 
@@ -146,6 +146,7 @@ MAILERS = {
     },
 }
 
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
