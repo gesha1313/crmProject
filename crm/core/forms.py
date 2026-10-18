@@ -10,14 +10,44 @@ class RoomForm(forms.ModelForm):
         fields = ['number', 'floor', 'capacity', 'note']
 
 
-class ResidentForm(forms.ModelForm):
-    class Meta:
-        model = Resident
-        fields = ['full_name', 'room', 'plan_name', 'monthly_price', 'status',
-                  'move_in', 'move_out', 'contact', 'site_user_id', 'notes']
-        widgets = {'move_in': forms.DateInput(attrs={'type': 'date'}),
-                   'move_out': forms.DateInput(attrs={'type': 'date'}),
-                   'notes': forms.Textarea(attrs={'rows': 2})}
+class CheckInForm(forms.Form):
+    """Заселение подопечного из заявки: только выбор комнаты и дата."""
+    room = forms.ModelChoiceField(label='Комната', queryset=None)
+    move_in = forms.DateField(
+        label='Дата заезда',
+        widget=forms.DateInput(attrs={'type': 'date'}))
+    contact = forms.CharField(label='Контакт семьи', max_length=200,
+                              required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Room
+        self.fields['room'].queryset = Room.objects.all()
+
+
+class ResidentEditForm(forms.Form):
+    """Редактирование жильца: ФИО не трогаем — оно из заявки."""
+    status = forms.ChoiceField(label='Статус', choices=[])
+    room = forms.ModelChoiceField(label='Комната', queryset=None, required=False)
+    move_in = forms.DateField(label='Дата заезда', required=False,
+                              widget=forms.DateInput(attrs={'type': 'date'}))
+    move_out = forms.DateField(label='Дата выезда', required=False,
+                               widget=forms.DateInput(attrs={'type': 'date'}))
+    plan_name = forms.CharField(label='Тариф', max_length=100, required=False)
+    monthly_price = forms.IntegerField(label='Цена, ₽/мес', required=False,
+                                       min_value=0)
+    contact = forms.CharField(label='Контакт семьи', max_length=200, required=False)
+    notes = forms.CharField(label='Заметки', required=False,
+                            widget=forms.Textarea(attrs={'rows': 2}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Room
+        self.fields['status'].choices = [
+            ('booked', 'Бронь (из заявки)'),
+            ('lives', 'Проживает'),
+            ('left', 'Выехал')]
+        self.fields['room'].queryset = Room.objects.all()
 
 
 class ChargeForm(forms.ModelForm):

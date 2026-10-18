@@ -8,7 +8,7 @@
   <h2 class="card__title">Жильцы пансионата ({{ crm_residents|length }})</h2>
   {% if crm_residents %}
   <table class="table">
-    <tr><th>ФИО</th><th>Комната</th><th>Тариф</th><th>Заезд</th><th>Статус</th><th>Контакт семьи</th></tr>
+    <tr><th>ФИО</th><th>Комната</th><th>Тариф</th><th>Заезд</th><th>Статус</th><th>Контакт семьи</th><th></th></tr>
     {% for r in crm_residents %}
     <tr>
       <td>{{ r.name }}</td>
@@ -17,21 +17,19 @@
       <td>{% if r.move_in %}{{ r.move_in }}{% else %}дата не указана{% endif %}{% if r.move_out %} — {{ r.move_out }}{% endif %}</td>
       <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
       <td>{{ r.contact }}</td>
+      <td>
+        {% if r.badge == 'warn' %}
+          <a class="link" style="margin-top:0;" href="{% url 'resident-checkin' r.id %}">Заселить</a>
+        {% else %}
+          <a class="link" style="margin-top:0;" href="{% url 'resident-edit' r.id %}">Изменить</a>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </table>
   {% else %}
-  <p class="card__hint">Жильцов пока нет. Заселите первого через форму ниже.</p>
+  <p class="card__hint">Жильцов пока нет — они появятся сами из заявок «в пансионат» со статусами «Новая»/«В работе».</p>
   {% endif %}
-</section>
-
-<section class="card">
-  <h2 class="card__title">Заселить жильца</h2>
-  <form method="post" class="auth">
-    {% csrf_token %}
-    {{ rform.as_p }}
-    <button class="btn btn--primary" type="submit">Заселить</button>
-  </form>
 </section>
 
 <section class="card">

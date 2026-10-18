@@ -89,10 +89,6 @@ def dashboard(request):
 
 @login_required
 def residents(request):
-    rform = ResidentForm(request.POST or None)
-    if request.method == 'POST' and rform.is_valid():
-        rform.save()
-        return redirect('residents')
     crm_residents = [{
         'id': r.id, 'name': r.full_name,
         'room': r.room.number if r.room_id else '—',
@@ -106,9 +102,52 @@ def residents(request):
     return render(request, 'crm/residents.html', {
         'reqs': _req_rows(),
         'crs': _cr_rows(),
-        'rform': rform,
         'crm_residents': crm_residents,
     })
+
+
+@login_required
+def resident_checkin(request, pk):
+    res = get_object_or_404(Resident, pk=pk)
+    form = CheckInForm(request.POST or None,
+                       initial={'move_in': timezone.localdate()})
+    if request.method == 'POST' and form.is_valid():
+        d = form.cleaned_data
+        res.room = d['room']
+        res.move_in = d['move_in']
+        res.contact = d['contact']
+        res.status = Resident.STATUS_LIVES
+        res.save()
+        return redirect('residents')
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Заселение — {res.full_name} '
+                      f'({res.plan_name or "без тарифа"})',
+        'form': form})
+
+
+@login_required
+def resident_edit(request, pk):
+    res = get_object_or_404(Resident, pk=pk)
+    form = ResidentEditForm(request.POST or None, initial={
+        'status': res.status, 'room': res.room_id,
+        'move_in': res.move_in, 'move_out': res.move_out,
+        'plan_name': res.plan_name, 'monthly_price': res.monthly_price,
+        'contact': res.contact, 'notes': res.notes})
+    if request.method == 'POST' and form.is_valid():
+        d = form.cleaned_data
+        res.status = d['status']
+        res.room = d['room']
+        res.move_in = d['move_in']
+        res.move_out = d['move_out']
+        res.plan_name = d['plan_name']
+        res.monthly_price = d['monthly_price'] or 0
+        res.contact = d['contact']
+        res.notes = d['notes']
+        res.save()
+        return redirect('residents')
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Жилец — {res.full_name}',
+        'form': form})
 
 
 @login_required
@@ -206,7 +245,8 @@ from django.db.models import Sum, Avg
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
-from .forms import ChargeForm, PaymentForm, ResidentForm, RoomForm
+from .forms import (ChargeForm, CheckInForm, PaymentForm,
+                   ResidentEditForm, RoomForm)
 from .models import Charge, Payment, Resident, Room
 
 MONTHS_RU = {1: 'Янв', 2: 'Фев', 3: 'Мар', 4: 'Апр', 5: 'Май', 6: 'Июн',
