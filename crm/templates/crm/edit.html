@@ -18,6 +18,11 @@
     {% csrf_token %}
     {{ form.as_p }}
     <button class="btn btn--primary" type="submit">Сохранить</button>
+    {% if allow_delete %}
+    <button class="btn btn--neutral" type="submit" name="delete" value="1"
+            style="margin-left:8px; border-color:#b91c1c; color:#b91c1c;"
+            onclick="return confirm('Удалить запись?');">Удалить</button>
+    {% endif %}
   </form>
 </section>
 

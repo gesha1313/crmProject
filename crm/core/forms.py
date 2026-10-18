@@ -50,15 +50,11 @@ class ResidentEditForm(forms.Form):
         self.fields['room'].queryset = Room.objects.all()
 
 
-class ChargeForm(forms.ModelForm):
+class ChargeEditForm(forms.ModelForm):
     class Meta:
         model = Charge
         fields = ['resident', 'period', 'amount', 'kind', 'title']
         widgets = {'period': forms.DateInput(attrs={'type': 'date'})}
-
-    def clean_period(self):
-        d = self.cleaned_data['period']
-        return d.replace(day=1)
 
 
 class PaymentForm(forms.ModelForm):

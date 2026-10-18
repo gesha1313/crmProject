@@ -245,7 +245,7 @@ from django.db.models import Sum, Avg
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
-from .forms import (ChargeForm, CheckInForm, PaymentForm,
+from .forms import (ChargeEditForm, CheckInForm, PaymentForm,
                    ResidentEditForm, RoomForm)
 from .models import Charge, Payment, Resident, Room
 
@@ -280,9 +280,8 @@ def _finance():
             'width': round(val / max(pay_by_m.values()) * 100) if pay_by_m else 0,
         })
 
-    charges_m0 = Charge.objects.filter(period=m0)
-    charged_m0 = charges_m0.aggregate(s=Sum('amount'))['s'] or 0
     income_m0 = pay_by_m.get(m0.strftime('%Y-%m'), 0)
+    payments_cnt_m0 = Payment.objects.filter(paid_on__gte=m0).count()
     avg_check = (charges_m0.filter(kind='live')
                  .aggregate(a=Avg('amount'))['a'] or 0)
 
@@ -303,7 +302,7 @@ def _finance():
     return {
         'bars': bars,
         'income_m0': income_m0,
-        'charged_m0': charged_m0,
+        'payments_cnt_m0': payments_cnt_m0,
         'avg_check': int(avg_check),
         'debt_total': sum(d['debt'] for d in debt_rows),
         'debt_rows': debt_rows[:5],
@@ -331,7 +330,14 @@ def rooms(request):
 def payments(request):
     form = PaymentForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        p = form.save()
+        # реестр начислений пополняется сам: платёж = начисленная сумма
+        Charge.objects.create(
+            resident=p.resident, amount=p.amount,
+            period=p.period or p.paid_on.replace(day=1),
+            kind=Charge.KIND_LIVE,
+            title=f'Платёж ({p.get_method_display()}, {p.paid_on:%d.%m.%Y})'
+                  + (f' — {p.note}' if p.note else ''))
         return redirect('payments')
     rows = [{
         'resident': p.resident.full_name if p.resident_id else '—',
@@ -346,31 +352,32 @@ def payments(request):
 
 @login_required
 def charges(request):
-    if request.method == 'POST' and request.POST.get('generate'):
-        m0 = timezone.localdate().replace(day=1)
-        created = 0
-        for r in Resident.objects.filter(status=Resident.STATUS_LIVES):
-            if r.monthly_price and not Charge.objects.filter(
-                    resident=r, period=m0, kind=Charge.KIND_LIVE).exists():
-                Charge.objects.create(
-                    resident=r, period=m0, amount=r.monthly_price,
-                    kind=Charge.KIND_LIVE,
-                    title=f'Проживание, {m0:%m.%Y}')
-                created += 1
+    rows = [{
+        'id': c.id,
+        'resident': c.resident.full_name if c.resident_id else '—',
+        'room': c.resident.room.number if c.resident_id and c.resident.room else '—',
+        'period': c.period, 'amount': c.amount,
+        'kind': c.get_kind_display(), 'title': c.title,
+    } for c in (Charge.objects.select_related('resident', 'resident__room')
+                .order_by('-id')[:100])]
+    total = Charge.objects.aggregate(s=Sum('amount'))['s'] or 0
+    return render(request, 'crm/charges.html',
+                  {'rows': rows, 'total': total})
+
+
+@login_required
+def charge_edit(request, pk):
+    charge = get_object_or_404(Charge, pk=pk)
+    form = ChargeEditForm(request.POST or None, instance=charge)
+    if request.method == 'POST' and request.POST.get('delete'):
+        charge.delete()
         return redirect('charges')
-    form = ChargeForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         form.save()
         return redirect('charges')
-    rows = [{
-        'resident': c.resident.full_name if c.resident_id else '—',
-        'period': c.period, 'amount': c.amount,
-        'kind': c.get_kind_display(), 'title': c.title,
-    } for c in (Charge.objects.select_related('resident')
-                .order_by('-period', '-id')[:50])]
-    total = Charge.objects.aggregate(s=Sum('amount'))['s'] or 0
-    return render(request, 'crm/charges.html',
-                  {'form': form, 'rows': rows, 'total': total})
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Начисление #{pk} — {charge.resident if charge.resident_id else "—"}',
+        'form': form, 'allow_delete': True})
 
 
 # ============================================================
