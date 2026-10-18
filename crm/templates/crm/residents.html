@@ -38,7 +38,7 @@
   <h2 class="card__title">Заявки в пансионат — все ({{ reqs|length }})</h2>
   {% if reqs %}
   <table class="table">
-    <tr><th>Подопечный</th><th>Клиент</th><th>Тариф</th><th>Статус</th><th>Создана</th></tr>
+    <tr><th>Подопечный</th><th>Клиент</th><th>Тариф</th><th>Статус</th><th>Создана</th><th></th></tr>
     {% for r in reqs %}
     <tr>
       <td>{{ r.ward }}</td>
@@ -46,6 +46,7 @@
       <td>{{ r.plan }}</td>
       <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
       <td>{{ r.created }}</td>
+      <td><a class="link" style="margin-top:0;" href="{% url 'request-edit' r.id %}">Изменить</a></td>
     </tr>
     {% endfor %}
   </table>
@@ -58,7 +59,7 @@
   <h2 class="card__title">Заявки на сиделку — все ({{ crs|length }})</h2>
   {% if crs %}
   <table class="table">
-    <tr><th>Подопечный</th><th>Возраст</th><th>Клиент</th><th>Сиделка</th><th>Начало</th><th>Статус</th></tr>
+    <tr><th>Подопечный</th><th>Возраст</th><th>Клиент</th><th>Сиделка</th><th>Начало</th><th>Статус</th><th></th></tr>
     {% for r in crs %}
     <tr>
       <td>{{ r.ward }}</td>
@@ -67,6 +68,7 @@
       <td>{{ r.caretaker }}</td>
       <td>{{ r.start }}</td>
       <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
+      <td><a class="link" style="margin-top:0;" href="{% url 'caretaker-edit' r.id %}">Изменить</a></td>
     </tr>
     {% endfor %}
   </table>

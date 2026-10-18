@@ -1,0 +1,16 @@
+{% extends 'crm/base.html' %}
+{% block title %}{{ edit_title }}{% endblock %}
+{% block page_title %}{{ edit_title }}{% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <p class="card__hint">Изменения пишутся напрямую в Turso и мгновенно видны на сайте.</p>
+  <form method="post" class="auth" style="max-width:520px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn--primary" type="submit">Сохранить</button>
+  </form>
+</section>
+
+{% endblock %}

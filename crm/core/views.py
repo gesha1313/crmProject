@@ -26,6 +26,7 @@ def _req_rows():
     rows = []
     for r in Requests.objects.select_related('user', 'plan').order_by('-created_at'):
         rows.append({
+            'id': r.id,
             'ward': r.ward_name or '—',
             'client': r.user.email if r.user_id else '—',
             'plan': f'{r.plan.name} — {r.plan.monthly_price:,} ₽'.replace(',', ' ') if r.plan else '—',
@@ -47,6 +48,7 @@ def _cr_rows():
             except Users.userprofiles.RelatedObjectDoesNotExist:
                 name = r.caretaker_user.email
         rows.append({
+            'id': r.id,
             'ward': r.ward_name or '—',
             'age': r.ward_age if r.ward_age is not None else '—',
             'client': r.user.email if r.user_id else '—',
@@ -111,6 +113,17 @@ def residents(request):
 
 @login_required
 def chat(request):
+    if request.method == 'POST':
+        mform = MessageForm(request.POST)
+        cid = request.POST.get('c')
+        if mform.is_valid() and cid and cid.isdigit() and turso.enabled():
+            sender = turso.employee_id()
+            if sender:
+                turso.create('messages', {
+                    'conversation_id': int(cid), 'sender_id': sender,
+                    'body': mform.cleaned_data['body']})
+                turso.update('conversations', int(cid), {'updated_at': _now()})
+        return redirect(f'/chat/?c={cid or ""}')
     convs = []
     selected = None
     conv_list = list(Conversations.objects.select_related('user').order_by('id'))
@@ -150,6 +163,7 @@ def users(request):
     for u in Users.objects.order_by('-created_at'):
         p = profiles.get(u.id)
         rows.append({
+            'id': u.id,
             'email': u.email,
             'role': ROLE_LABELS.get(u.role, u.role),
             'name': (p.full_name if p else '') or '—',
@@ -314,3 +328,109 @@ def charges(request):
     total = Charge.objects.aggregate(s=Sum('amount'))['s'] or 0
     return render(request, 'crm/charges.html',
                   {'form': form, 'rows': rows, 'total': total})
+
+
+# ============================================================
+# Редактирование данных сайта — запись напрямую в Turso
+# ============================================================
+
+from django.shortcuts import get_object_or_404
+
+from . import turso
+from .forms import (CaretakerEditForm, MessageForm, RequestEditForm,
+                    SiteUserEditForm)
+from .models import CaretakerRequests as CR
+from .models import Requests as Req
+from .models import Users as SiteUsers
+from .models import UserProfiles as SiteProfiles
+
+
+def _now():
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def _request_rows_with_ids():
+    """Список заявок с id — для ссылок на редактирование."""
+    return [{
+        'id': r.id, 'ward': r.ward_name or '—',
+        'client': r.user.email if r.user_id else '—',
+        'plan': r.plan.name if r.plan_id else '—',
+        'status': STATUS_LABELS.get(r.status, r.status),
+        'badge': STATUS_BADGES.get(r.status, 'gray'),
+        'created': r.created_at,
+    } for r in Req.objects.select_related('user', 'plan').order_by('-created_at')]
+
+
+@login_required
+def request_edit(request, pk):
+    obj = get_object_or_404(Req, pk=pk)
+    form = RequestEditForm(request.POST or None, initial={
+        'ward_name': obj.ward_name or '', 'status': obj.status,
+        'employee': obj.employee_id or '', 'plan': obj.plan_id or '',
+        'message': obj.message or ''})
+    if request.method == 'POST' and form.is_valid():
+        d = form.cleaned_data
+        turso.update('requests', pk, {
+            'ward_name': d['ward_name'], 'status': d['status'],
+            'employee_id': d['employee'] or None,
+            'plan_id': d['plan'] or None,
+            'message': d['message'], 'updated_at': _now()})
+        if d['status'] != obj.status and obj.user_id:
+            turso.create('notifications', {
+                'user_id': obj.user_id, 'kind': 'info',
+                'title': 'Статус заявки обновлён',
+                'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        return redirect('residents')
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Заявка #{pk} — {obj.user.email if obj.user_id else "—"}',
+        'form': form})
+
+
+@login_required
+def caretaker_edit(request, pk):
+    obj = get_object_or_404(CR, pk=pk)
+    form = CaretakerEditForm(request.POST or None, initial={
+        'status': obj.status, 'caretaker': obj.caretaker_user_id or '',
+        'start_date': obj.start_date or '', 'notes': obj.notes or ''})
+    if request.method == 'POST' and form.is_valid():
+        d = form.cleaned_data
+        turso.update('caretaker_requests', pk, {
+            'status': d['status'],
+            'caretaker_user_id': d['caretaker'] or None,
+            'start_date': d['start_date'], 'notes': d['notes'],
+            'updated_at': _now()})
+        if d['status'] != obj.status and obj.user_id:
+            turso.create('notifications', {
+                'user_id': obj.user_id, 'kind': 'info',
+                'title': 'Заявка на сиделку обновлена',
+                'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        return redirect('residents')
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Заявка на сиделку #{pk} — {obj.ward_name}',
+        'form': form})
+
+
+@login_required
+def site_user_edit(request, pk):
+    obj = get_object_or_404(SiteUsers, pk=pk)
+    profile = SiteProfiles.objects.filter(user_id=pk).first()
+    form = SiteUserEditForm(request.POST or None, initial={
+        'role': obj.role,
+        'full_name': profile.full_name if profile else '',
+        'phone': profile.phone if profile else ''})
+    if request.method == 'POST' and form.is_valid():
+        d = form.cleaned_data
+        turso.update('users', pk, {'role': d['role']})
+        if profile:
+            turso.update('user_profiles', pk, {
+                'full_name': d['full_name'] or None,
+                'phone': d['phone'] or None, 'updated_at': _now()},
+                pk_col='user')
+        else:
+            turso.create('user_profiles', {
+                'user': pk, 'full_name': d['full_name'] or None,
+                'phone': d['phone'] or None})
+        return redirect('users')
+    return render(request, 'crm/edit.html', {
+        'edit_title': f'Пользователь — {obj.email}', 'form': form})
