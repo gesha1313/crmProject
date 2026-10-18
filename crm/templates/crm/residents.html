@@ -14,7 +14,7 @@
       <td>{{ r.name }}</td>
       <td>{{ r.room }}</td>
       <td>{{ r.plan }}</td>
-      <td>{{ r.move_in }}{% if r.move_out %} — {{ r.move_out }}{% endif %}</td>
+      <td>{% if r.move_in %}{{ r.move_in }}{% else %}дата не указана{% endif %}{% if r.move_out %} — {{ r.move_out }}{% endif %}</td>
       <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
       <td>{{ r.contact }}</td>
     </tr>

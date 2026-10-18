@@ -160,7 +160,7 @@ class Resident(models.Model):
     monthly_price = models.IntegerField('цена, ₽/мес', default=0)
     status = models.CharField('статус', max_length=10, choices=STATUS,
                               default=STATUS_LIVES)
-    move_in = models.DateField('заезд')
+    move_in = models.DateField('заезд', null=True, blank=True)
     move_out = models.DateField('выезд', null=True, blank=True)
     contact = models.CharField('контакт семьи', max_length=200, blank=True)
     site_user_id = models.IntegerField('id на сайте', null=True, blank=True)

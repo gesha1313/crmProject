@@ -34,6 +34,8 @@ class TursoRefreshMiddleware:
                     try:
                         from django.core.management import call_command
                         call_command('pull_turso', verbosity=0)
+                        from .sync_residents import sync_residents
+                        sync_residents()
                     except Exception as exc:
                         print(f'[sync] обновление из Turso не удалось: {exc}')
         return self.get_response(request)
