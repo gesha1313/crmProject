@@ -78,10 +78,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # Локально: копия из Turso (data/patronage.db).
-        # На деплое её нет (папка не в git) — создаётся пустая SQLite рядом с проектом.
+        # Если заданы TURSO_DATABASE_URL + TURSO_AUTH_TOKEN — работаем с копией
+        # Turso (файл turso.db, обновляется командой manage.py pull_turso).
+        # Локально без переменных: data/patronage.db, иначе пустая db.sqlite3.
         'NAME': (
             os.environ.get('DJANGO_DB')
+            or (BASE_DIR / 'turso.db'
+                if os.environ.get('TURSO_DATABASE_URL') and os.environ.get('TURSO_AUTH_TOKEN')
+                else None)
             or (BASE_DIR.parent / 'data' / 'patronage.db'
                 if (BASE_DIR.parent / 'data' / 'patronage.db').exists()
                 else BASE_DIR / 'db.sqlite3')
