@@ -78,9 +78,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # Копия базы из Turso (демо-проект «Патронаж»).
-        # Обновляется скриптом выгрузки: turso db shell patronage ".dump" | sqlite3
-        'NAME': BASE_DIR.parent / 'data' / 'patronage.db',
+        # Локально: копия из Turso (data/patronage.db).
+        # На деплое её нет (папка не в git) — создаётся пустая SQLite рядом с проектом.
+        'NAME': (
+            os.environ.get('DJANGO_DB')
+            or (BASE_DIR.parent / 'data' / 'patronage.db'
+                if (BASE_DIR.parent / 'data' / 'patronage.db').exists()
+                else BASE_DIR / 'db.sqlite3')
+        ),
     }
 }
 
