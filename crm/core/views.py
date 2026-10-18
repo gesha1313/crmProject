@@ -282,7 +282,7 @@ def _finance():
 
     income_m0 = pay_by_m.get(m0.strftime('%Y-%m'), 0)
     payments_cnt_m0 = Payment.objects.filter(paid_on__gte=m0).count()
-    avg_check = (charges_m0.filter(kind='live')
+    avg_check = (Payment.objects.filter(paid_on__gte=months[0])
                  .aggregate(a=Avg('amount'))['a'] or 0)
 
     debt_rows = []
