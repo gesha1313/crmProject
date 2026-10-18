@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Патронаж CRM — Дашборд</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Сайдбар (в Django станет базовым шаблоном base.html) -->
+  <aside class="sidebar">
+    <div class="sidebar__logo">Патронаж CRM</div>
+    <nav class="side-nav">
+      <a class="side-nav__link is-active" href="index.html">Дашборд</a>
+      <a class="side-nav__link" href="residents.html">Жильцы</a>
+      <a class="side-nav__link" href="analytics.html">Аналитика</a>
+      <a class="side-nav__link" href="rooms.html">Комнаты</a>
+      <a class="side-nav__link" href="tasks.html">Задачи</a>
+      <a class="side-nav__link" href="chat.html">Чаты</a>
+      <a class="side-nav__link" href="automation.html">Автоматизация</a>
+      <a class="side-nav__link" href="regulations.html">Регламенты</a>
+    </nav>
+    <div class="sidebar__footer">Вы вошли как: Анна Смирнова<br>Роль: менеджер</div>
+  </aside>
+
+  <div class="page">
+    <header class="topbar">
+      <h1 class="topbar__title">Дашборд</h1>
+      <div class="topbar__user">Пансионат «Патронаж» · 17 октября 2026, суббота</div>
+    </header>
+
+    <main class="content">
+
+      <!-- KPI: пункт ТЗ 3 — контроль и аналитика -->
+      <div class="cards-row">
+        <div class="kpi">
+          <div class="kpi__label">Доход за октябрь</div>
+          <div class="kpi__value">1 284 000 ₽</div>
+          <div class="kpi__sub kpi__sub--up">+8% к сентябрю</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Жильцы / мест</div>
+          <div class="kpi__value">42 / 48</div>
+          <div class="kpi__sub">Загрузка пансионата: 87%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Средний чек</div>
+          <div class="kpi__value">76 400 ₽</div>
+          <div class="kpi__sub kpi__sub--up">+2 100 ₽ за месяц</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Конверсия заявок</div>
+          <div class="kpi__value">24%</div>
+          <div class="kpi__sub kpi__sub--down">−3% за месяц</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- Доход по месяцам -->
+        <section class="card">
+          <h2 class="card__title">Доход по месяцам, 2026</h2>
+          <div class="bars__row">
+            <span class="bars__label">Май</span>
+            <div class="bars__track"><div class="bars__fill" style="width: 82%;"></div></div>
+            <span class="bars__value">1 156 000 ₽</span>
+          </div>
+          <div class="bars__row">
+            <span class="bars__label">Июнь</span>
+            <div class="bars__track"><div class="bars__fill" style="width: 84%;"></div></div>
+            <span class="bars__value">1 189 000 ₽</span>
+          </div>
+          <div class="bars__row">
+            <span class="bars__label">Июль</span>
+            <div class="bars__track"><div class="bars__fill" style="width: 86%;"></div></div>
+            <span class="bars__value">1 208 000 ₽</span>
+          </div>
+          <div class="bars__row">
+            <span class="bars__label">Август</span>
+            <div class="bars__track"><div class="bars__fill" style="width: 87%;"></div></div>
+            <span class="bars__value">1 231 000 ₽</span>
+          </div>
+          <div class="bars__row">
+            <span class="bars__label">Сентябрь</span>
+            <div class="bars__track"><div class="bars__fill" style="width: 89%;"></div></div>
+            <span class="bars__value">1 267 000 ₽</span>
+          </div>
+          <div class="bars__row">
+            <span class="bars__label">Октябрь</span>
+            <div class="bars__track"><div class="bars__fill bars__fill--alt" style="width: 91%;"></div></div>
+            <span class="bars__value">1 284 000 ₽</span>
+          </div>
+        </section>
+
+        <!-- Загрузка и эффективность менеджеров: пункт ТЗ 3 -->
+        <section class="card">
+          <h2 class="card__title">Эффективность менеджеров, октябрь</h2>
+          <table class="table">
+            <tr>
+              <th>Менеджер</th>
+              <th class="num">Заявки</th>
+              <th class="num">Сделки</th>
+              <th class="num">Конверсия</th>
+              <th class="num">Выручка</th>
+            </tr>
+            <tr>
+              <td>Анна Смирнова</td>
+              <td class="num">14</td>
+              <td class="num">5</td>
+              <td class="num">36%</td>
+              <td class="num">412 000 ₽</td>
+            </tr>
+            <tr>
+              <td>Пётр Козлов</td>
+              <td class="num">11</td>
+              <td class="num">3</td>
+              <td class="num">27%</td>
+              <td class="num">267 000 ₽</td>
+            </tr>
+            <tr>
+              <td>Мария Дёмина</td>
+              <td class="num">9</td>
+              <td class="num">2</td>
+              <td class="num">22%</td>
+              <td class="num">178 000 ₽</td>
+            </tr>
+          </table>
+        </section>
+      </div>
+
+      <!-- Последние заявки -->
+      <section class="card">
+        <h2 class="card__title">Последние заявки</h2>
+        <table class="table">
+          <tr>
+            <th>Клиент</th>
+            <th>Источник</th>
+            <th>Тариф</th>
+            <th>Менеджер</th>
+            <th>Дата</th>
+            <th>Статус</th>
+          </tr>
+          <tr>
+            <td>Кузнецова Елена (за мать)</td>
+            <td>Сайт — форма</td>
+            <td>Комфорт — 78 000 ₽</td>
+            <td>Анна Смирнова</td>
+            <td>17.10.2026</td>
+            <td><span class="badge badge--warn">Новая</span></td>
+          </tr>
+          <tr>
+            <td>Гусев Дмитрий</td>
+            <td>Яндекс Метрика / реклама</td>
+            <td>Комфорт — 78 000 ₽</td>
+            <td>Анна Смирнова</td>
+            <td>16.10.2026</td>
+            <td><span class="badge badge--ok">Бронь</span></td>
+          </tr>
+          <tr>
+            <td>Романова Ольга (за отца)</td>
+            <td>Звонок</td>
+            <td>Стандарт — 62 000 ₽</td>
+            <td>Пётр Козлов</td>
+            <td>15.10.2026</td>
+            <td><span class="badge badge--ok">Договор</span></td>
+          </tr>
+          <tr>
+            <td>ООО «Забота» (корп.)</td>
+            <td>Повторное обращение</td>
+            <td>Комфорт+ — 89 000 ₽</td>
+            <td>Мария Дёмина</td>
+            <td>14.10.2026</td>
+            <td><span class="badge badge--gray">Счёт отправлен</span></td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- Напоминания: пункт ТЗ 5 -->
+      <section class="card">
+        <h2 class="card__title">Напоминания на сегодня</h2>
+        <div class="list__item">
+          <span>Позвонить Кузнецовой Елене — обсудить продление договора</span>
+          <span class="list__meta">сегодня, 16:00 · Анна Смирнова</span>
+        </div>
+        <div class="list__item">
+          <span>Отправить счёт ООО «Забота» за октябрь</span>
+          <span class="list__meta">до 18.10.2026 · Мария Дёмина</span>
+        </div>
+        <div class="list__item">
+          <span>Оплата от Смирновой О.В. не поступила — уточнить</span>
+          <span class="list__meta">просрочено на 2 дня · Пётр Козлов</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>

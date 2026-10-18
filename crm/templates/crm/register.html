@@ -1,0 +1,24 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Патронаж CRM — регистрация</title>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
+
+<div class="card" style="width:400px; margin:0;">
+  <h2 class="card__title" style="text-align:center;">Регистрация в CRM</h2>
+  <form method="post" class="auth">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn--primary" type="submit" style="width:100%;">Создать аккаунт</button>
+  </form>
+  <p class="card__hint" style="text-align:center; margin-top:12px;">
+    Уже есть аккаунт? <a href="{% url 'login' %}" style="color:#2563eb;">Войти</a>
+  </p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Патронаж CRM — Автоматизация</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar__logo">Патронаж CRM</div>
+    <nav class="side-nav">
+      <a class="side-nav__link" href="index.html">Дашборд</a>
+      <a class="side-nav__link" href="residents.html">Жильцы</a>
+      <a class="side-nav__link" href="analytics.html">Аналитика</a>
+      <a class="side-nav__link" href="rooms.html">Комнаты</a>
+      <a class="side-nav__link" href="tasks.html">Задачи</a>
+      <a class="side-nav__link" href="chat.html">Чаты</a>
+      <a class="side-nav__link is-active" href="automation.html">Автоматизация</a>
+      <a class="side-nav__link" href="regulations.html">Регламенты</a>
+    </nav>
+    <div class="sidebar__footer">Вы вошли как: Анна Смирнова<br>Роль: менеджер</div>
+  </aside>
+
+  <div class="page">
+    <header class="topbar">
+      <h1 class="topbar__title">Автоматизация рутины</h1>
+      <div class="topbar__user">Документы · письма · напоминания</div>
+    </header>
+
+    <main class="content">
+
+      <!-- Пункт ТЗ 5: автозаполнение документов -->
+      <section class="card">
+        <h2 class="card__title">Автозаполнение документов</h2>
+        <p class="card__hint">Шаблон подставляет данные жильца из карточки — на выходе готовый файл.</p>
+        <table class="table">
+          <tr>
+            <th>Документ</th>
+            <th>Поля подстановки</th>
+            <th>Заполняет</th>
+            <th>Формат</th>
+            <th>Действие</th>
+          </tr>
+          <tr>
+            <td>Договор проживания</td>
+            <td><span class="code">{{ФИО}}</span> <span class="code">{{комната}}</span> <span class="code">{{тариф}}</span> <span class="code">{{срок}}</span></td>
+            <td>по карточке жильца</td>
+            <td>PDF / DOCX</td>
+            <td><a class="btn btn--outline" href="#">Заполнить</a></td>
+          </tr>
+          <tr>
+            <td>Счёт на оплату</td>
+            <td><span class="code">{{плательщик}}</span> <span class="code">{{сумма}}</span> <span class="code">{{месяц}}</span></td>
+            <td>по начислению месяца</td>
+            <td>PDF</td>
+            <td><a class="btn btn--outline" href="#">Заполнить</a></td>
+          </tr>
+          <tr>
+            <td>Акт оказанных услуг</td>
+            <td><span class="code">{{период}}</span> <span class="code">{{сумма}}</span> <span class="code">{{доп_услуги}}</span></td>
+            <td>по закрытым месяцам</td>
+            <td>PDF / DOCX</td>
+            <td><a class="btn btn--outline" href="#">Заполнить</a></td>
+          </tr>
+          <tr>
+            <td>Справка о проживании</td>
+            <td><span class="code">{{ФИО}}</span> <span class="code">{{период}}</span></td>
+            <td>по карточке жильца</td>
+            <td>PDF</td>
+            <td><a class="btn btn--outline" href="#">Заполнить</a></td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- Пункт ТЗ 5: автоматические письма -->
+      <section class="card">
+        <h2 class="card__title">Автоматические письма</h2>
+        <table class="table">
+          <tr>
+            <th>Письмо</th>
+            <th>Триггер</th>
+            <th>Кому</th>
+            <th>Последняя отправка</th>
+            <th>Статус</th>
+          </tr>
+          <tr>
+            <td>Приветственное письмо и памятка</td>
+            <td>создана заявка на сайте</td>
+            <td>клиент</td>
+            <td>сегодня, 09:14 (Кузнецова Е.)</td>
+            <td><span class="badge badge--ok">Активно</span></td>
+          </tr>
+          <tr>
+            <td>Счёт за месяц (с PDF-вложением)</td>
+            <td>1 число каждого месяца</td>
+            <td>плательщик</td>
+            <td>01.10.2026 — 41 письмо</td>
+            <td><span class="badge badge--ok">Активно</span></td>
+          </tr>
+          <tr>
+            <td>Напоминание об оплате</td>
+            <td>за 5 дней до конца месяца, если долг</td>
+            <td>плательщик</td>
+            <td>26.09.2026 — 3 письма</td>
+            <td><span class="badge badge--ok">Активно</span></td>
+          </tr>
+          <tr>
+            <td>«Как проходит месяц» — отчёт семье</td>
+            <td>раз в месяц, 5 число</td>
+            <td>родственники</td>
+            <td>05.10.2026 — 38 писем</td>
+            <td><span class="badge badge--warn">Черновик</span></td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- Пункт ТЗ 5: напоминания менеджерам -->
+      <section class="card">
+        <h2 class="card__title">Напоминания менеджерам</h2>
+        <p class="card__hint">Правило само создаёт задачу нужному менеджеру в разделе «Задачи» и дублирует в чат «Менеджеры».</p>
+        <table class="table">
+          <tr>
+            <th>Правило</th>
+            <th>Триггер</th>
+            <th>Ответственный</th>
+            <th>Статус</th>
+          </tr>
+          <tr>
+            <td>Позвонить клиенту после заявки</td>
+            <td>прошло 3 дня, звонка не было</td>
+            <td>менеджер заявки</td>
+            <td><span class="badge badge--ok">Включено</span></td>
+          </tr>
+          <tr>
+            <td>Отправить счёт</td>
+            <td>до 5 числа, счёт не отправлен</td>
+            <td>менеджер жильца</td>
+            <td><span class="badge badge--ok">Включено</span></td>
+          </tr>
+          <tr>
+            <td>Продлить договор</td>
+            <td>за 30 дней до окончания</td>
+            <td>менеджер жильца</td>
+            <td><span class="badge badge--ok">Включено</span></td>
+          </tr>
+          <tr>
+            <td>День рождения жильца</td>
+            <td>за 2 дня — подготовить поздравление</td>
+            <td>старший менеджер</td>
+            <td><span class="badge badge--ok">Включено</span></td>
+          </tr>
+          <tr>
+            <td>Контроль долга</td>
+            <td>просрочка более 3 дней</td>
+            <td>менеджер + директор</td>
+            <td><span class="badge badge--gray">Выключено</span></td>
+          </tr>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>

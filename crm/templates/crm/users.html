@@ -1,0 +1,22 @@
+{% extends 'crm/base.html' %}
+{% block title %}Пользователи{% endblock %}
+{% block page_title %}Пользователи — все из базы ({{ rows|length }}){% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <table class="table">
+    <tr><th>Email</th><th>Роль</th><th>Имя</th><th>Телефон</th><th>Регистрация</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.email }}</td>
+      <td><span class="badge badge--gray">{{ r.role }}</span></td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.phone }}</td>
+      <td>{{ r.created }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</section>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Патронаж CRM — {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar__logo">Патронаж CRM</div>
+    <nav class="side-nav">
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'dashboard' %}">Дашборд</a>
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'residents' %} is-active{% endif %}" href="{% url 'residents' %}">Жильцы и заявки</a>
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'chat' %} is-active{% endif %}" href="{% url 'chat' %}">Чаты</a>
+      {% if user.is_superuser %}
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'users' %} is-active{% endif %}" href="{% url 'users' %}">Пользователи</a>
+      {% endif %}
+    </nav>
+    <div class="sidebar__footer">
+      {% if user.is_authenticated %}
+        {{ user.username }} · <a href="{% url 'logout' %}">Выйти</a>
+      {% else %}
+        <a href="{% url 'login' %}">Вход</a> · <a href="{% url 'register' %}">Регистрация</a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="page">
+    <header class="topbar">
+      <h1 class="topbar__title">{% block page_title %}{% endblock %}</h1>
+      <div class="topbar__user">Пансионат «Патронаж» · данные из Turso</div>
+    </header>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+</body>
+</html>

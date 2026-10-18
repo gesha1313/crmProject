@@ -1,0 +1,17 @@
+# Python / Django
+.venv/
+__pycache__/
+*.pyc
+crm/staticfiles/
+crm/media/
+
+# Локальные базы и выгрузки (копия тянется из Turso)
+data/*.db
+data/*.sql
+
+# macOS
+.DS_Store
+
+# Секреты
+.env
+.env.local

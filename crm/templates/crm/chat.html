@@ -1,0 +1,38 @@
+{% extends 'crm/base.html' %}
+{% block title %}Чаты{% endblock %}
+{% block page_title %}Чаты горячей линии{% endblock %}
+
+{% block content %}
+
+<div class="chat">
+  <div class="chat__channels">
+    {% for c in convs %}
+    <a class="chat__channel{% if c.id == selected_id %} is-active{% endif %}" href="{% url 'chat' %}?c={{ c.id }}">
+      {{ c.title }}
+      <span class="chat__channel-meta">{{ c.n }} сообщ.</span>
+    </a>
+    {% empty %}
+    <span class="chat__channel">Диалогов нет</span>
+    {% endfor %}
+  </div>
+
+  <div class="chat__main">
+    <div class="chat__head">{{ selected_title }}</div>
+    <div class="chat__log">
+      {% for m in messages %}
+      <div class="msg">
+        <div class="msg__meta">{{ m.sender }} · {{ m.created }}</div>
+        <div class="msg__body">{{ m.body }}</div>
+      </div>
+      {% empty %}
+      <p class="muted">В этом диалоге пока нет сообщений.</p>
+      {% endfor %}
+    </div>
+    <div class="chat__input">
+      <input class="input" type="text" placeholder="Отправка сообщений — в разработке" disabled>
+      <button class="btn btn--primary" type="button" disabled>Отправить</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

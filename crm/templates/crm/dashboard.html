@@ -1,0 +1,85 @@
+{% extends 'crm/base.html' %}
+{% block title %}Дашборд{% endblock %}
+{% block page_title %}Дашборд{% endblock %}
+
+{% block content %}
+
+<div class="cards-row">
+  <div class="kpi">
+    <div class="kpi__label">Пользователей</div>
+    <div class="kpi__value">{{ users_total }}</div>
+    <div class="kpi__sub">{% for role, n in roles %}{{ role }}: {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Заявки в пансионат</div>
+    <div class="kpi__value">{{ req_count }}</div>
+    <div class="kpi__sub">таблица requests</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Заявки на сиделку</div>
+    <div class="kpi__value">{{ cr_count }}</div>
+    <div class="kpi__sub">таблица caretaker_requests</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Диалоги / сообщения</div>
+    <div class="kpi__value">{{ conv_count }} / {{ msg_count }}</div>
+    <div class="kpi__sub">горячая линия</div>
+  </div>
+</div>
+
+<section class="card">
+  <h2 class="card__title">Заявки в пансионат</h2>
+  {% if reqs %}
+  <table class="table">
+    <tr><th>Подопечный</th><th>Клиент</th><th>Тариф</th><th>Статус</th><th>Создана</th></tr>
+    {% for r in reqs %}
+    <tr>
+      <td>{{ r.ward }}</td>
+      <td>{{ r.client }}</td>
+      <td>{{ r.plan }}</td>
+      <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
+      <td>{{ r.created }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Заявок пока нет.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 class="card__title">Последние заявки на сиделку</h2>
+  {% if crs %}
+  <table class="table">
+    <tr><th>Подопечный</th><th>Возраст</th><th>Клиент</th><th>Сиделка</th><th>Начало</th><th>Статус</th></tr>
+    {% for r in crs %}
+    <tr>
+      <td>{{ r.ward }}</td>
+      <td>{{ r.age }}</td>
+      <td>{{ r.client }}</td>
+      <td>{{ r.caretaker }}</td>
+      <td>{{ r.start }}</td>
+      <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Заявок пока нет.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 class="card__title">Последние уведомления</h2>
+  {% if notifs %}
+    {% for n in notifs %}
+    <div class="list__item">
+      <span>{{ n.title }}{% if n.body %} — <span class="muted">{{ n.body }}</span>{% endif %}</span>
+      <span class="list__meta">{{ n.user }} · {{ n.created }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="card__hint">Уведомлений нет.</p>
+  {% endif %}
+</section>
+
+{% endblock %}
