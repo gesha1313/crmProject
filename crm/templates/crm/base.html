@@ -9,7 +9,7 @@
 <body>
 
   <aside class="sidebar">
-    <div class="sidebar__logo">Патронаж CRM</div>
+    <div class="sidebar__logo">CRM система учета и Администрирования</div>
     <nav class="side-nav">
       <a class="side-nav__link{% if request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'dashboard' %}">Дашборд</a>
       <a class="side-nav__link{% if request.resolver_match.url_name == 'residents' %} is-active{% endif %}" href="{% url 'residents' %}">Жильцы и заявки</a>
@@ -30,7 +30,7 @@
   <div class="page">
     <header class="topbar">
       <h1 class="topbar__title">{% block page_title %}{% endblock %}</h1>
-      <div class="topbar__user">Пансионат «Патронаж» · данные из Turso</div>
+      <div class="topbar__user">Данные актуальны</div>
     </header>
 
     <main class="content">

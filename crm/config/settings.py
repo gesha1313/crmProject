@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,13 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o@2pdsmvgz)352ih@618etpct=xy*de#pm%#9zp!x@fmos5j^v'
+# Прод: значения задаются переменными окружения (Amvera → Переменные и секреты)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-o@2pdsmvgz)352ih@618etpct=xy*de#pm%#9zp!x@fmos5j^v')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
+CSRF_TRUSTED_ORIGINS = os.environ.get('DJANGO_CSRF_ORIGINS', 'https://*.amvera.io').split(',')
 
 
 # Application definition
@@ -119,8 +121,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Общая папка css/ в корне проекта (admin.css из визуального прототипа)
-STATICFILES_DIRS = [BASE_DIR.parent / 'css']
+# Прод-сборка статики: python manage.py collectstatic
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Email
