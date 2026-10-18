@@ -4,6 +4,14 @@
 
 {% block content %}
 
+{% if turso_error %}
+<section class="card" style="border-color:#b91c1c;">
+  <p><strong>Не сохранено:</strong> запись в Turso не прошла.</p>
+  <p class="muted">{{ turso_error }}</p>
+  <p class="card__hint">Проверь секрет TURSO_AUTH_TOKEN в настройках проекта: нужен токен из CLI (turso db tokens create), а не API-ключ из веб-панели Turso.</p>
+</section>
+{% endif %}
+
 <section class="card">
   <p class="card__hint">Изменения пишутся напрямую в Turso и мгновенно видны на сайте.</p>
   <form method="post" class="auth" style="max-width:520px;">

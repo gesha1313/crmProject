@@ -29,6 +29,10 @@ def run():
             print(f'[bootstrap] скачать crm.db не удалось: {exc}', file=sys.stderr)
 
     call_command('migrate', database='crm', interactive=False, verbosity=0)
+    try:
+        call_command('collectstatic', interactive=False, verbosity=0)
+    except Exception as exc:
+        print(f'[bootstrap] collectstatic пропущен: {exc}', file=sys.stderr)
 
     if not User.objects.filter(username='admin').exists():
         User.objects.create_superuser('admin', 'admin@patronage.ru', 'Admin123!')

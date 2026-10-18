@@ -1,7 +1,8 @@
-"""Синхронизация: Turso → локальный SQLite, которым пользуется Django.
+"""Синхронизация: Turso → локальный кеш SQLite, которым читает Django.
 
-Работает через HTTP API v2 (pipeline) без внешних зависимостей:
-схема берётся из sqlite_master, данные — обычными SELECT * по таблицам.
+«Мягкий» рефреш: все таблицы запрашиваются одним batch-запросом к HTTP API v2
+и перезаливаются в кеж через DELETE + INSERT OR REPLACE. Файл не пересоздаётся,
+поэтому открытые соединения и write-through записи не страдают.
 """
 import base64
 import json
@@ -11,6 +12,7 @@ import urllib.request
 from pathlib import Path
 
 from django.conf import settings
+from django.db import connections
 from django.core.management.base import BaseCommand, CommandError
 
 
@@ -41,11 +43,11 @@ def _value(cell):
 
 
 class Command(BaseCommand):
-    help = 'Тянет схему и данные из Turso в локальный файл SQLite'
+    help = 'Обновляет локальный кеш данными из Turso (мягкий рефреш)'
 
     def handle(self, *args, **options):
-        url = os.environ.get('TURSO_DATABASE_URL', '')
-        token = os.environ.get('TURSO_AUTH_TOKEN', '')
+        url = os.environ.get('TURSO_DATABASE_URL', '').strip()
+        token = os.environ.get('TURSO_AUTH_TOKEN', '').strip()
         if not (url.startswith('libsql://') or url.startswith('https://')) or not token:
             self.stdout.write('TURSO_DATABASE_URL / TURSO_AUTH_TOKEN не заданы — синк пропущен')
             return
@@ -64,21 +66,32 @@ class Command(BaseCommand):
         ])
 
         path = str(settings.DATABASES['default']['NAME'])
-        Path(path).unlink(missing_ok=True)
-        con = sqlite3.connect(path)
-        try:
+        fresh = not os.path.exists(path)
+        if fresh:  # первый запуск — создать файл и схему
+            con = sqlite3.connect(path)
+            try:
+                for _, ddl in tables:
+                    con.execute(ddl)
+                con.commit()
+            finally:
+                con.close()
+
+        total = 0
+        with connections['default'].cursor() as cur:
+            cur.execute('PRAGMA foreign_keys = OFF')  # полная перезаливка кеша
             for (name, ddl), res in zip(tables, data):
+                if fresh:
+                    cur.execute(ddl.replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', 1))
                 cols = [c['name'] for c in res['cols']]
-                con.execute(ddl)
                 rows = [tuple(_value(c) for c in row) for row in res['rows']]
+                cur.execute(f'DELETE FROM "{name}"')
                 if rows:
-                    marks = ','.join('?' * len(cols))
-                    collist = ','.join(f'"{c}"' for c in cols)
-                    con.executemany(
-                        f'INSERT INTO "{name}" ({collist}) VALUES ({marks})', rows)
-            con.commit()
-        finally:
-            con.close()
-        total = sum(r for r in (len(x['rows']) for x in data))
+                    collist = ', '.join(f'"{c}"' for c in cols)
+                    cur.executemany(
+                        f'INSERT OR REPLACE INTO "{name}" ({collist}) '
+                        f'VALUES ({", ".join(["%s"] * len(cols))})', rows)
+                total += len(rows)
+            cur.execute('PRAGMA foreign_keys = ON')
+        Path(path).touch()
         self.stdout.write(self.style.SUCCESS(
             f'Turso → {path}: таблиц {len(tables)}, строк {total}'))

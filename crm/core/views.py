@@ -117,12 +117,15 @@ def chat(request):
         mform = MessageForm(request.POST)
         cid = request.POST.get('c')
         if mform.is_valid() and cid and cid.isdigit() and turso.enabled():
-            sender = turso.employee_id()
-            if sender:
-                turso.create('messages', {
-                    'conversation_id': int(cid), 'sender_id': sender,
-                    'body': mform.cleaned_data['body']})
-                turso.update('conversations', int(cid), {'updated_at': _now()})
+            try:
+                sender = turso.employee_id()
+                if sender:
+                    turso.create('messages', {
+                        'conversation_id': int(cid), 'sender_id': sender,
+                        'body': mform.cleaned_data['body']})
+                    turso.update('conversations', int(cid), {'updated_at': _now()})
+            except Exception as exc:
+                print(f'[chat] не записано в Turso: {exc}')
         return redirect(f'/chat/?c={cid or ""}')
     convs = []
     selected = None
@@ -371,16 +374,21 @@ def request_edit(request, pk):
         'message': obj.message or ''})
     if request.method == 'POST' and form.is_valid():
         d = form.cleaned_data
-        turso.update('requests', pk, {
-            'ward_name': d['ward_name'], 'status': d['status'],
-            'employee_id': d['employee'] or None,
-            'plan_id': d['plan'] or None,
-            'message': d['message'], 'updated_at': _now()})
-        if d['status'] != obj.status and obj.user_id:
-            turso.create('notifications', {
-                'user_id': obj.user_id, 'kind': 'info',
-                'title': 'Статус заявки обновлён',
-                'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        try:
+            turso.update('requests', pk, {
+                'ward_name': d['ward_name'], 'status': d['status'],
+                'employee_id': d['employee'] or None,
+                'plan_id': d['plan'] or None,
+                'message': d['message'], 'updated_at': _now()})
+            if d['status'] != obj.status and obj.user_id:
+                turso.create('notifications', {
+                    'user_id': obj.user_id, 'kind': 'info',
+                    'title': 'Статус заявки обновлён',
+                    'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        except Exception as exc:
+            return render(request, 'crm/edit.html', {
+                'edit_title': f'Заявка #{pk} — {obj.user.email if obj.user_id else "—"}',
+                'form': form, 'turso_error': str(exc)})
         return redirect('residents')
     return render(request, 'crm/edit.html', {
         'edit_title': f'Заявка #{pk} — {obj.user.email if obj.user_id else "—"}',
@@ -395,16 +403,21 @@ def caretaker_edit(request, pk):
         'start_date': obj.start_date or '', 'notes': obj.notes or ''})
     if request.method == 'POST' and form.is_valid():
         d = form.cleaned_data
-        turso.update('caretaker_requests', pk, {
-            'status': d['status'],
-            'caretaker_user_id': d['caretaker'] or None,
-            'start_date': d['start_date'], 'notes': d['notes'],
-            'updated_at': _now()})
-        if d['status'] != obj.status and obj.user_id:
-            turso.create('notifications', {
-                'user_id': obj.user_id, 'kind': 'info',
-                'title': 'Заявка на сиделку обновлена',
-                'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        try:
+            turso.update('caretaker_requests', pk, {
+                'status': d['status'],
+                'caretaker_user_id': d['caretaker'] or None,
+                'start_date': d['start_date'], 'notes': d['notes'],
+                'updated_at': _now()})
+            if d['status'] != obj.status and obj.user_id:
+                turso.create('notifications', {
+                    'user_id': obj.user_id, 'kind': 'info',
+                    'title': 'Заявка на сиделку обновлена',
+                    'body': f'Новый статус: {STATUS_LABELS.get(d["status"], d["status"])}'})
+        except Exception as exc:
+            return render(request, 'crm/edit.html', {
+                'edit_title': f'Заявка на сиделку #{pk} — {obj.ward_name}',
+                'form': form, 'turso_error': str(exc)})
         return redirect('residents')
     return render(request, 'crm/edit.html', {
         'edit_title': f'Заявка на сиделку #{pk} — {obj.ward_name}',
@@ -421,16 +434,21 @@ def site_user_edit(request, pk):
         'phone': profile.phone if profile else ''})
     if request.method == 'POST' and form.is_valid():
         d = form.cleaned_data
-        turso.update('users', pk, {'role': d['role']})
-        if profile:
-            turso.update('user_profiles', pk, {
-                'full_name': d['full_name'] or None,
-                'phone': d['phone'] or None, 'updated_at': _now()},
-                pk_col='user')
-        else:
-            turso.create('user_profiles', {
-                'user': pk, 'full_name': d['full_name'] or None,
-                'phone': d['phone'] or None})
+        try:
+            turso.update('users', pk, {'role': d['role']})
+            if profile:
+                turso.update('user_profiles', pk, {
+                    'full_name': d['full_name'] or None,
+                    'phone': d['phone'] or None, 'updated_at': _now()},
+                    pk_col='user')
+            else:
+                turso.create('user_profiles', {
+                    'user': pk, 'full_name': d['full_name'] or None,
+                    'phone': d['phone'] or None})
+        except Exception as exc:
+            return render(request, 'crm/edit.html', {
+                'edit_title': f'Пользователь — {obj.email}', 'form': form,
+                'turso_error': str(exc)})
         return redirect('users')
     return render(request, 'crm/edit.html', {
         'edit_title': f'Пользователь — {obj.email}', 'form': form})
