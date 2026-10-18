@@ -1,6 +1,7 @@
 from django import forms
 
-from .models import Charge, Payment, Resident, Room
+from .models import (Charge, Payment, Resident, Room,
+                   Plans, Users, UserProfiles)
 
 
 class RoomForm(forms.ModelForm):
