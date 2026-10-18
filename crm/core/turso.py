@@ -19,8 +19,12 @@ def _http_base():
     return 'https://' + url[len('libsql://'):] if url.startswith('libsql://') else url
 
 
+def _token():
+    return os.environ.get('TURSO_AUTH_TOKEN', '').strip()
+
+
 def enabled():
-    return bool(_http_base() and os.environ.get('TURSO_AUTH_TOKEN'))
+    return bool(_http_base() and _token())
 
 
 def _arg(value):
@@ -46,7 +50,7 @@ def execute(sql, args=()):
             'type': 'execute',
             'stmt': {'sql': sql, 'args': [_arg(a) for a in args]},
         }]}).encode(),
-        headers={'Authorization': 'Bearer ' + os.environ['TURSO_AUTH_TOKEN'],
+        headers={'Authorization': 'Bearer ' + _token(),
                  'Content-Type': 'application/json'},
         method='POST')
     with urllib.request.urlopen(req, timeout=60) as resp:
