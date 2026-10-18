@@ -593,3 +593,92 @@ a {
 .auth input { width: 100%; padding: 8px 10px; font: inherit; border: 1px solid #d1d5db; }
 .auth ul { list-style: none; margin: 4px 0 0; }
 .auth li { font-size: 12px; color: #b91c1c; }
+
+/* ===== Мобильная адаптация ===== */
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+  }
+  .side-nav {
+    display: flex;
+    overflow-x: auto;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .side-nav__link {
+    white-space: nowrap;
+    padding: 12px 14px;
+  }
+  .sidebar__logo {
+    padding: 14px 16px 8px;
+  }
+  .sidebar__footer {
+    padding: 8px 16px;
+  }
+  .page {
+    margin-left: 0;
+  }
+  .cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .chat {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .chat__channels {
+    display: flex;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #d1d5db;
+    padding: 0;
+  }
+  .chat__channel {
+    white-space: nowrap;
+    padding: 10px 14px;
+  }
+  .chat__channel-meta {
+    display: none;
+  }
+  .chat__log {
+    height: 55vh;
+  }
+}
+
+@media (max-width: 560px) {
+  .cards-row {
+    grid-template-columns: 1fr;
+  }
+  .kpi__value {
+    font-size: 19px;
+  }
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px 14px;
+  }
+  .content {
+    padding: 12px;
+  }
+  .card {
+    padding: 12px;
+    overflow-x: auto;      /* широкие таблицы скроллятся внутри карточки */
+    -webkit-overflow-scrolling: touch;
+  }
+  .table {
+    min-width: 620px;
+  }
+  .msg {
+    max-width: 88%;
+  }
+  body > .card {
+    max-width: calc(100vw - 24px);   /* страницы входа/регистрации */
+  }
+  .bars__value {
+    width: 64px;
+  }
+}
