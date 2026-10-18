@@ -4,6 +4,55 @@
 
 {% block content %}
 
+<!-- Финансы: платёжные данные из CRM -->
+<div class="cards-row">
+  <div class="kpi">
+    <div class="kpi__label">Доход за {{ fin.bars.5.label }}</div>
+    <div class="kpi__value">{{ fin.income_m0 }} ₽</div>
+    <div class="kpi__sub">поступления платежей за месяц</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Начислено / оплачено, месяц</div>
+    <div class="kpi__value">{{ fin.charged_m0 }} / {{ fin.income_m0 }} ₽</div>
+    <div class="kpi__sub">проживание и доп. услуги</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Средний чек</div>
+    <div class="kpi__value">{{ fin.avg_check }} ₽</div>
+    <div class="kpi__sub">начисление за проживание</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Долги / жильцы</div>
+    <div class="kpi__value">{{ fin.debt_total }} ₽</div>
+    <div class="kpi__sub">{{ fin.living }} проживает, мест: {{ fin.capacity }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2 class="card__title">Доход по месяцам (платежи)</h2>
+    {% for b in fin.bars %}
+    <div class="bars__row">
+      <span class="bars__label">{{ b.label }}</span>
+      <div class="bars__track"><div class="bars__fill{% if forloop.last %} bars__fill--alt{% endif %}" style="width: {{ b.width }}%;"></div></div>
+      <span class="bars__value">{{ b.value }} ₽</span>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">Должники (начислено − оплачено)</h2>
+    {% for d in fin.debt_rows %}
+    <div class="list__item">
+      <span>{{ d.name }} (комн. {{ d.room }})</span>
+      <span class="badge badge--danger">{{ d.debt }} ₽</span>
+    </div>
+    {% empty %}
+    <p class="card__hint">Долгов нет — либо всё оплачено, либо начисления ещё не вводились.</p>
+    {% endfor %}
+  </section>
+</div>
+
 <div class="cards-row">
   <div class="kpi">
     <div class="kpi__label">Пользователей</div>

@@ -1,0 +1,46 @@
+{% extends 'crm/base.html' %}
+{% block title %}Начисления{% endblock %}
+{% block page_title %}Начисления — всего: {{ total }} ₽{% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <h2 class="card__title">Начисления за месяц</h2>
+  <p class="card__hint">Кнопка создаёт начисление «Проживание» за текущий месяц каждому проживающему жильцу по его цене тарифа. Повторное нажатие дубликатов не создаёт.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="generate" value="1">
+    <button class="btn btn--primary" type="submit">Начислить за текущий месяц</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2 class="card__title">Начислить вручную</h2>
+  <form method="post" class="auth">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn--primary" type="submit">Сохранить начисление</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2 class="card__title">Последние начисления</h2>
+  {% if rows %}
+  <table class="table">
+    <tr><th>Жилец</th><th>Период</th><th class="num">Сумма</th><th>Тип</th><th>Назначение</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.resident }}</td>
+      <td>{{ r.period|date:'m.Y' }}</td>
+      <td class="num">{{ r.amount }} ₽</td>
+      <td>{{ r.kind }}</td>
+      <td>{{ r.title|default:'—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Начислений пока нет.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

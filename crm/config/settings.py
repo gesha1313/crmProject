@@ -93,8 +93,15 @@ DATABASES = {
                 if (BASE_DIR.parent / 'data' / 'patronage.db').exists()
                 else BASE_DIR / 'db.sqlite3')
         ),
-    }
+    },
+    # Постоянная база CRM: не пересоздаётся синком pull_turso
+    'crm': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.environ.get('CRM_DB', BASE_DIR / 'crm.db'),
+    },
 }
+
+DATABASE_ROUTERS = ['core.routers.CrmRouter']
 
 
 # Password validation

@@ -13,6 +13,9 @@
     <nav class="side-nav">
       <a class="side-nav__link{% if request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'dashboard' %}">Дашборд</a>
       <a class="side-nav__link{% if request.resolver_match.url_name == 'residents' %} is-active{% endif %}" href="{% url 'residents' %}">Жильцы и заявки</a>
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'rooms' %} is-active{% endif %}" href="{% url 'rooms' %}">Комнаты</a>
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'payments' %} is-active{% endif %}" href="{% url 'payments' %}">Платежи</a>
+      <a class="side-nav__link{% if request.resolver_match.url_name == 'charges' %} is-active{% endif %}" href="{% url 'charges' %}">Начисления</a>
       <a class="side-nav__link{% if request.resolver_match.url_name == 'chat' %} is-active{% endif %}" href="{% url 'chat' %}">Чаты</a>
       {% if user.is_superuser %}
       <a class="side-nav__link{% if request.resolver_match.url_name == 'users' %} is-active{% endif %}" href="{% url 'users' %}">Пользователи</a>

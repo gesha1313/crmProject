@@ -122,3 +122,103 @@ class Notifications(models.Model):
     class Meta:
         managed = False
         db_table = 'notifications'
+
+
+# ============================================================
+# CRM-модели (managed): живут в отдельной базе crm.db.
+# Связи с данными сайта (users/requests из Turso) — только по id,
+# без ForeignKey: базы разные.
+# ============================================================
+
+class Room(models.Model):
+    number = models.CharField('Номер', max_length=8, unique=True)
+    floor = models.PositiveSmallIntegerField('Этаж')
+    capacity = models.PositiveSmallIntegerField('Мест', default=1)
+    note = models.CharField('Заметка', max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = 'комната'
+        verbose_name_plural = 'комнаты'
+        ordering = ['number']
+
+    def __str__(self):
+        return self.number
+
+
+class Resident(models.Model):
+    STATUS_LIVES, STATUS_BOOKED, STATUS_LEFT = 'lives', 'booked', 'left'
+    STATUS = [
+        (STATUS_LIVES, 'Проживает'),
+        (STATUS_BOOKED, 'Бронь'),
+        (STATUS_LEFT, 'Выехал'),
+    ]
+
+    full_name = models.CharField('ФИО жильца', max_length=200)
+    room = models.ForeignKey(Room, verbose_name='комната', null=True, blank=True,
+                             on_delete=models.SET_NULL)
+    plan_name = models.CharField('тариф', max_length=100, blank=True)
+    monthly_price = models.IntegerField('цена, ₽/мес', default=0)
+    status = models.CharField('статус', max_length=10, choices=STATUS,
+                              default=STATUS_LIVES)
+    move_in = models.DateField('заезд')
+    move_out = models.DateField('выезд', null=True, blank=True)
+    contact = models.CharField('контакт семьи', max_length=200, blank=True)
+    site_user_id = models.IntegerField('id на сайте', null=True, blank=True)
+    notes = models.TextField('заметки', blank=True)
+    created_at = models.DateTimeField('создан', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'жилец'
+        verbose_name_plural = 'жильцы'
+        ordering = ['full_name']
+
+    def __str__(self):
+        return self.full_name
+
+
+class Charge(models.Model):
+    KIND_LIVE, KIND_EXTRA = 'live', 'extra'
+    KINDS = [(KIND_LIVE, 'Проживание'), (KIND_EXTRA, 'Доп. услуга')]
+
+    resident = models.ForeignKey(Resident, verbose_name='жилец',
+                                 on_delete=models.CASCADE,
+                                 related_name='charges')
+    period = models.DateField('период (месяц)')
+    amount = models.IntegerField('сумма, ₽')
+    kind = models.CharField('тип', max_length=5, choices=KINDS, default=KIND_LIVE)
+    title = models.CharField('назначение', max_length=200, blank=True)
+    created_at = models.DateTimeField('создано', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'начисление'
+        verbose_name_plural = 'начисления'
+        ordering = ['-period', '-id']
+
+    def __str__(self):
+        return f'{self.resident} — {self.amount} ₽ ({self.period:%m.%Y})'
+
+
+class Payment(models.Model):
+    METHODS = [
+        ('card', 'Карта'), ('cash', 'Наличные'),
+        ('transfer', 'Перевод'), ('account', 'Счёт/юр. лицо'),
+    ]
+
+    resident = models.ForeignKey(Resident, verbose_name='жилец',
+                                 on_delete=models.CASCADE,
+                                 related_name='payments')
+    amount = models.IntegerField('сумма, ₽')
+    paid_on = models.DateField('дата оплаты')
+    period = models.DateField('за период', null=True, blank=True)
+    method = models.CharField('способ', max_length=10, choices=METHODS,
+                              default='card')
+    note = models.CharField('примечание', max_length=200, blank=True)
+    created_at = models.DateTimeField('создан', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'платёж'
+        verbose_name_plural = 'платежи'
+        ordering = ['-paid_on', '-id']
+
+    def __str__(self):
+        return f'{self.resident} — {self.amount} ₽ ({self.paid_on:%d.%m.%Y})'

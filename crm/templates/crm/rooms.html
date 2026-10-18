@@ -1,0 +1,36 @@
+{% extends 'crm/base.html' %}
+{% block title %}Комнаты{% endblock %}
+{% block page_title %}Комната{% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <h2 class="card__title">Добавить комнату</h2>
+  <form method="post" class="auth">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn--primary" type="submit">Добавить</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2 class="card__title">Список комнат</h2>
+  {% if rooms %}
+  <table class="table">
+    <tr><th>Номер</th><th>Этаж</th><th class="num">Мест</th><th class="num">Проживает</th><th>Заметка</th></tr>
+    {% for r in rooms %}
+    <tr>
+      <td>{{ r.number }}</td>
+      <td>{{ r.floor }}</td>
+      <td class="num">{{ r.capacity }}</td>
+      <td class="num">{{ r.living }}</td>
+      <td>{{ r.note|default:'—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Комнат пока нет — добавьте первую.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -5,6 +5,36 @@
 {% block content %}
 
 <section class="card">
+  <h2 class="card__title">Жильцы пансионата ({{ crm_residents|length }})</h2>
+  {% if crm_residents %}
+  <table class="table">
+    <tr><th>ФИО</th><th>Комната</th><th>Тариф</th><th>Заезд</th><th>Статус</th><th>Контакт семьи</th></tr>
+    {% for r in crm_residents %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.room }}</td>
+      <td>{{ r.plan }}</td>
+      <td>{{ r.move_in }}{% if r.move_out %} — {{ r.move_out }}{% endif %}</td>
+      <td><span class="badge badge--{{ r.badge }}">{{ r.status }}</span></td>
+      <td>{{ r.contact }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Жильцов пока нет. Заселите первого через форму ниже.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 class="card__title">Заселить жильца</h2>
+  <form method="post" class="auth">
+    {% csrf_token %}
+    {{ rform.as_p }}
+    <button class="btn btn--primary" type="submit">Заселить</button>
+  </form>
+</section>
+
+<section class="card">
   <h2 class="card__title">Заявки в пансионат — все ({{ reqs|length }})</h2>
   {% if reqs %}
   <table class="table">

@@ -1,0 +1,37 @@
+{% extends 'crm/base.html' %}
+{% block title %}Платежи{% endblock %}
+{% block page_title %}Платежи — всего: {{ total }} ₽{% endblock %}
+
+{% block content %}
+
+<section class="card">
+  <h2 class="card__title">Принять платёж</h2>
+  <form method="post" class="auth">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn--primary" type="submit">Сохранить платёж</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2 class="card__title">Последние платежи</h2>
+  {% if rows %}
+  <table class="table">
+    <tr><th>Жилец</th><th class="num">Сумма</th><th>Дата</th><th>За период</th><th>Способ</th><th>Примечание</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.resident }}</td>
+      <td class="num">{{ r.amount }} ₽</td>
+      <td>{{ r.paid_on }}</td>
+      <td>{{ r.period|default:'—' }}</td>
+      <td>{{ r.method }}</td>
+      <td>{{ r.note|default:'—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="card__hint">Платежей пока нет. Заведите жильца, начислите месяц — и вносите оплаты.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

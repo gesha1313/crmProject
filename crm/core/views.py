@@ -81,14 +81,31 @@ def dashboard(request):
         'reqs': reqs,
         'crs': crs[:5],
         'notifs': notifs,
+        'fin': _finance(),
     })
 
 
 @login_required
 def residents(request):
+    rform = ResidentForm(request.POST or None)
+    if request.method == 'POST' and rform.is_valid():
+        rform.save()
+        return redirect('residents')
+    crm_residents = [{
+        'id': r.id, 'name': r.full_name,
+        'room': r.room.number if r.room_id else '—',
+        'plan': f'{r.plan_name} — {r.monthly_price:,} ₽'.replace(',', ' ')
+                if r.plan_name else '—',
+        'status': r.get_status_display(),
+        'badge': {'lives': 'ok', 'booked': 'warn', 'left': 'gray'}[r.status],
+        'move_in': r.move_in, 'move_out': r.move_out or '',
+        'contact': r.contact or '—',
+    } for r in Resident.objects.select_related('room')]
     return render(request, 'crm/residents.html', {
         'reqs': _req_rows(),
         'crs': _cr_rows(),
+        'rform': rform,
+        'crm_residents': crm_residents,
     })
 
 
@@ -160,3 +177,140 @@ def register(request):
         auth_login(request, user)
         return redirect('dashboard')
     return render(request, 'crm/register.html', {'form': form})
+
+
+# ============================================================
+# Этапы 1–2: деньги и справочники CRM (база crm.db)
+# ============================================================
+
+from datetime import date as _date
+
+from django.db.models import Sum, Avg
+from django.db.models.functions import TruncMonth
+from django.utils import timezone
+
+from .forms import ChargeForm, PaymentForm, ResidentForm, RoomForm
+from .models import Charge, Payment, Resident, Room
+
+MONTHS_RU = {1: 'Янв', 2: 'Фев', 3: 'Мар', 4: 'Апр', 5: 'Май', 6: 'Июн',
+             7: 'Июл', 8: 'Авг', 9: 'Сен', 10: 'Окт', 11: 'Ноя', 12: 'Дек'}
+
+
+def _add_months(d, k):
+    y = d.year + (d.month - 1 + k) // 12
+    m = (d.month - 1 + k) % 12 + 1
+    return _date(y, m, 1)
+
+
+def _finance():
+    """Данные о деньгах для дашборда."""
+    today = timezone.localdate()
+    m0 = today.replace(day=1)
+    months = [_add_months(m0, -i) for i in range(5, -1, -1)]
+
+    pay_by_m = {
+        r['m'].strftime('%Y-%m'): r['s']
+        for r in (Payment.objects.filter(paid_on__gte=months[0])
+                  .annotate(m=TruncMonth('paid_on')).values('m')
+                  .annotate(s=Sum('amount')))
+    }
+    bars = []
+    for m in months:
+        val = pay_by_m.get(m.strftime('%Y-%m'), 0)
+        bars.append({
+            'label': f"{MONTHS_RU[m.month]} {str(m.year)[2:]}",
+            'value': val,
+            'width': round(val / max(pay_by_m.values()) * 100) if pay_by_m else 0,
+        })
+
+    charges_m0 = Charge.objects.filter(period=m0)
+    charged_m0 = charges_m0.aggregate(s=Sum('amount'))['s'] or 0
+    income_m0 = pay_by_m.get(m0.strftime('%Y-%m'), 0)
+    avg_check = (charges_m0.filter(kind='live')
+                 .aggregate(a=Avg('amount'))['a'] or 0)
+
+    debt_rows = []
+    for r in Resident.objects.filter(status=Resident.STATUS_LIVES):
+        charged = (Charge.objects.filter(resident=r)
+                   .aggregate(s=Sum('amount'))['s'] or 0)
+        paid = (Payment.objects.filter(resident=r)
+                .aggregate(s=Sum('amount'))['s'] or 0)
+        debt = charged - paid
+        if debt > 0:
+            debt_rows.append({'name': r.full_name, 'room': r.room.number
+                              if r.room_id else '—', 'debt': debt})
+    debt_rows.sort(key=lambda x: -x['debt'])
+
+    capacity = Room.objects.aggregate(s=Sum('capacity'))['s'] or 0
+    living = Resident.objects.filter(status=Resident.STATUS_LIVES).count()
+    return {
+        'bars': bars,
+        'income_m0': income_m0,
+        'charged_m0': charged_m0,
+        'avg_check': int(avg_check),
+        'debt_total': sum(d['debt'] for d in debt_rows),
+        'debt_rows': debt_rows[:5],
+        'living': living,
+        'capacity': capacity,
+    }
+
+
+@login_required
+def rooms(request):
+    form = RoomForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('rooms')
+    rooms_list = [{
+        'number': rm.number, 'floor': rm.floor, 'capacity': rm.capacity,
+        'note': rm.note,
+        'living': rm.resident_set.filter(status=Resident.STATUS_LIVES).count(),
+    } for rm in Room.objects.all()]
+    return render(request, 'crm/rooms.html',
+                  {'form': form, 'rooms': rooms_list})
+
+
+@login_required
+def payments(request):
+    form = PaymentForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('payments')
+    rows = [{
+        'resident': p.resident.full_name if p.resident_id else '—',
+        'amount': p.amount, 'paid_on': p.paid_on, 'period': p.period,
+        'method': p.get_method_display(), 'note': p.note,
+    } for p in (Payment.objects.select_related('resident')
+                .order_by('-paid_on', '-id')[:50])]
+    total = Payment.objects.aggregate(s=Sum('amount'))['s'] or 0
+    return render(request, 'crm/payments.html',
+                  {'form': form, 'rows': rows, 'total': total})
+
+
+@login_required
+def charges(request):
+    if request.method == 'POST' and request.POST.get('generate'):
+        m0 = timezone.localdate().replace(day=1)
+        created = 0
+        for r in Resident.objects.filter(status=Resident.STATUS_LIVES):
+            if r.monthly_price and not Charge.objects.filter(
+                    resident=r, period=m0, kind=Charge.KIND_LIVE).exists():
+                Charge.objects.create(
+                    resident=r, period=m0, amount=r.monthly_price,
+                    kind=Charge.KIND_LIVE,
+                    title=f'Проживание, {m0:%m.%Y}')
+                created += 1
+        return redirect('charges')
+    form = ChargeForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('charges')
+    rows = [{
+        'resident': c.resident.full_name if c.resident_id else '—',
+        'period': c.period, 'amount': c.amount,
+        'kind': c.get_kind_display(), 'title': c.title,
+    } for c in (Charge.objects.select_related('resident')
+                .order_by('-period', '-id')[:50])]
+    total = Charge.objects.aggregate(s=Sum('amount'))['s'] or 0
+    return render(request, 'crm/charges.html',
+                  {'form': form, 'rows': rows, 'total': total})
